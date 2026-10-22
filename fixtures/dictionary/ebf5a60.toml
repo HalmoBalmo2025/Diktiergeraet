@@ -1,0 +1,34 @@
+# Diktator – Wörterbuch
+#
+# Bearbeitbar im Panel (Reiter „Wörterbuch“) oder hier. Änderungen gelten ab
+# dem nächsten Diktat; ein Neustart ist nicht nötig. Ist die Datei
+# fehlerhaft, meldet Diktator das und arbeitet mit dem letzten fehlerfreien
+# Stand weiter. Speichert das Panel, schreibt es die Datei neu (eigene
+# Kommentare gehen dabei verloren).
+
+# Ersetzungen: links, was das Modell schreibt, rechts, was eingefügt wird.
+# Ersetzt werden nur ganze Wörter (auch mehrere hintereinander). Groß- und
+# Kleinschreibung zählt; ein kleingeschriebenes Wort wird am Satzanfang
+# auch großgeschrieben erkannt und dann großgeschrieben ersetzt.
+# Die Ersetzungen kommen vor den Jura-Regeln dran. Beispiel:
+# "Extunknichtigkeit" = "Ex-tunc-Nichtigkeit"
+[ersetzungen]
+"bgbat" = "BGB AT"
+"extunknichtigkeit" = "Ex-tunc-Nichtigkeit"
+
+# Fachbegriffe: Erkannte Wörter, die einem Begriff sehr ähnlich sind (ab 5
+# Buchstaben, 1 Zeichen Abweichung, ab 8 Buchstaben 2), werden zu diesem
+# Begriff – „Subsomo“ → „Subsumo“. Gebeugte Formen („Subsumos“) bleiben.
+# Nur einzelne Wörter; Wortgruppen gehören in die Ersetzungen.
+[fachbegriffe]
+liste = ["Subsumo"]
+
+# Normzitate (nur bei deutschen Diktaten und Videos):
+# „Paragraf 823 Absatz 1 Satz 2 BGB“ → „§ 823 I 2 BGB“.
+# absatz: "römisch" (§ 823 I 2 BGB) oder "abgekürzt" (§ 823 Abs. 1 S. 2 BGB)
+# gesetze: weitere Gesetzeskürzel, die nach einer Zahl als Gesetz gelten.
+# Bekannt sind schon BGB, StGB, ZPO, GG, VwGO und rund 70 weitere.
+[jura]
+an = false
+absatz = "abgekürzt"
+gesetze = ["KAGB"]

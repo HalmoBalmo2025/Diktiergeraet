@@ -1,0 +1,35 @@
+# cargo-mutants (https://mutants.rs), run by `scripts/check.sh full` on the
+# diff. The `mutants` profile in Cargo.toml builds without debug info.
+profile = "mutants"
+# Generous, because a mutant can turn a loop endless; such a mutant counts as
+# caught only through the timeout.
+timeout_multiplier = 3.0
+minimum_test_timeout = 20
+# Code that cannot run in host tests (FFI, UI shells) may be excluded here,
+# each glob with a comment why.
+exclude_globs = []
+# Truly equivalent mutants (they change nothing observable), each with its
+# reason. `main` is the thin shell; flow tests cover what it wires.
+exclude_re = [
+    'replace main with \(\)',
+    # Need the model (transcribe.cpp on Metal), which host tests cannot
+    # load; their logic (sections, partial text) is tested in
+    # `engine::transcribe_sections`.
+    'replace Engine::transcribe -> ',
+    'replace Worker<T>::transcribe_dictation -> ',
+    'replace Worker<T>::transcribe_long -> ',
+    # Need yt-dlp and ffmpeg, or macOS `open`; the chain itself is tested
+    # through `youtube::collect` with stand-ins.
+    'replace fetch_audio -> ',
+    'replace decode_file -> ',
+    'replace open_in_editor -> ',
+    # Reads the PID file in the user's app folder; the work is done (and
+    # tested) by `clean_up_stale_at`.
+    'replace clean_up_stale with \(\)',
+    # Needs a llama-server that answers; its 180 s load limit is too long
+    # for a test.
+    'replace > with (==|<|>=) in start$',
+    # Equivalent: whether yt-dlp still waits exactly at the end of the grace
+    # period is not observable (time moves on).
+    'replace > with >= in downloader_after_decoder',
+]

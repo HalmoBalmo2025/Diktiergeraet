@@ -1,0 +1,66 @@
+# Prüft mit `scripts/check.sh full` dasselbe wie der Commit-Hook und /ship
+# (Formatierung, Clippy, Tests, Doku, cargo-deny, cargo-shear, typos) und
+# typprüft die Swift-Hilfsprogramme. Läuft bei jedem Push auf
+# main und von Hand (Actions → Prüfung → Run workflow); ein Push mit mehreren
+# Commits ist ein Lauf. Läuft auf einem Mac mit Apple Silicon, weil Diktator
+# nur dort baut (Metal, CoreAudio, Bedienungshilfen); im privaten Repo zählt
+# eine Mac-Minute zehnfach.
+name: Prüfung
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  pruefen:
+    runs-on: macos-latest
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+      - uses: actions/checkout@v5
+
+      # Feste Version aus rust-toolchain.toml (mit clippy und rustfmt): Neue
+      # Clippy-Regeln sollen die Prüfung nicht über Nacht rot machen; die
+      # Version wird bewusst angehoben.
+      - name: Toolchain
+        run: rustup toolchain install
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deny,cargo-shear,cargo-mutants,typos
+
+      # Ohne Mutationstests: die laufen in /ship auf dem Mac, hier kostete
+      # jede Minute zehnfach. `--base HEAD` lässt den Diff leer.
+      - name: Prüfung (scripts/check.sh)
+        run: scripts/check.sh full --base HEAD
+
+      # Das Standard-Xcode des Runners ist oft älter als das neueste
+      # installierte; llm.swift braucht das SDK von macOS 27.
+      - name: Neuestes Xcode
+        run: |
+          newest=$(ls -d /Applications/Xcode*.app | sort -V | tail -n 1)
+          sudo xcode-select -s "$newest"
+          echo "Xcode: $newest, macOS-SDK $(xcrun --show-sdk-version)"
+
+      - name: Swift-Hilfsprogramme
+        run: |
+          xcrun swiftc -typecheck -target arm64-apple-macos14.0 helpers/context.swift
+          xcrun swiftc -typecheck -target arm64-apple-macos14.0 helpers/spell.swift
+          xcrun swiftc -typecheck -target arm64-apple-macos14.0 -parse-as-library -swift-version 5 helpers/ui/*.swift
+          # Foundation Models von macOS 27: ohne dieses SDK nur eine Warnung.
+          sdk=$(xcrun --show-sdk-version)
+          if [ "${sdk%%.*}" -ge 27 ]; then
+            xcrun swiftc -typecheck -target arm64-apple-macos27.0 -parse-as-library helpers/llm.swift
+          else
+            echo "::warning::helpers/llm.swift nicht geprüft: Der Runner hat nur das macOS-SDK $sdk, nötig ist 27."
+          fi

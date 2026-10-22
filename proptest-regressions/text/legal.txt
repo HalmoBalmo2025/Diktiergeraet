@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc ff925e9645fd21879d325a3fc7670af2d9377a1c3198d873663b24c1c13d6a57 # shrinks to text = "1 analog Absatz 1 1 BGB "

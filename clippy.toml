@@ -1,0 +1,99 @@
+# Companion file to the lints in Cargo.toml: thresholds, test exemptions,
+# and the rules of CLAUDE.md that a path ban can enforce.
+#
+# A path into a crate that is not a dependency is ignored silently; a wrong
+# path inside a dependency only prints a warning that the gate does not
+# turn into an error. After editing this file or updating dependencies,
+# read the clippy output and probe new entries (docs/guidelines/update.md).
+# The one sanctioned place for a banned call carries
+# `#[expect(clippy::disallowed_methods, reason = "…")]`.
+
+# Tests may unwrap, expect, panic, index and print (testing.md). These do not
+# cover `panic_in_result_fn` or the `disallowed_*` lints.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+allow-indexing-slicing-in-tests = true
+allow-print-in-tests = true
+
+# Nothing here is a published API: lint `pub` items too (`option_option`,
+# `rc_buffer`, `trivially_copy_pass_by_ref` are silent on them otherwise).
+avoid-breaking-exported-api = false
+# `manual_let_else` for every enum, not only Option and Result.
+matches-for-let-else = "AllTypes"
+
+# 0 switches `excessive_nesting` off. Every impl, fn, closure, loop, if and
+# match arm counts: a method in an impl may nest two levels, a free function
+# three.
+excessive-nesting-threshold = 4
+# Code lines, without comments and blank lines.
+too-many-lines-threshold = 60
+# "No bools as parameters or as more than one field" (rule 1).
+max-fn-params-bools = 0
+max-struct-bools = 1
+# Values that belong together are a struct.
+too-many-arguments-threshold = 5
+
+disallowed-methods = [
+    # Rule 4 and concurrency.md: named threads; a refused thread is an error.
+    { path = "std::thread::spawn", replacement = "std::thread::Builder::spawn", reason = "panics if the system refuses a thread; use a named thread::Builder" },
+    { path = "std::thread::Scope::spawn", reason = "panics if the system refuses a thread; use thread::Builder::spawn_scoped" },
+    # Rule 4: time is injected; read the clock in one clock module.
+    { path = "std::time::Instant::now", reason = "time is injected: read the clock in the one clock module so tests control it" },
+    { path = "std::time::SystemTime::now", reason = "time is injected: read the clock in the one clock module so tests control it" },
+    { path = "std::thread::sleep", reason = "time is injected: wait through the clock module so tests do not sleep" },
+    { path = "tokio::time::Instant::now", reason = "time is injected: read the clock in the one clock module" },
+    { path = "tokio::time::sleep", reason = "time is injected: wait through the clock module" },
+    { path = "chrono::Utc::now", reason = "time is injected: read the clock in the one clock module" },
+    { path = "chrono::Local::now", reason = "time is injected: read the clock in the one clock module" },
+    { path = "jiff::Timestamp::now", reason = "time is injected: read the clock in the one clock module" },
+    { path = "jiff::Zoned::now", reason = "time is injected: read the clock in the one clock module" },
+    { path = "time::OffsetDateTime::now_utc", reason = "time is injected: read the clock in the one clock module" },
+    { path = "time::OffsetDateTime::now_local", reason = "time is injected: read the clock in the one clock module" },
+    # rand without its `thread_rng` feature (as proptest pulls it in) has none
+    # of these functions; then there is nothing to ban.
+    { path = "rand::rng", reason = "randomness is injected so tests are reproducible", allow-invalid = true },
+    { path = "rand::thread_rng", reason = "randomness is injected so tests are reproducible", allow-invalid = true },
+    { path = "rand::random", reason = "randomness is injected so tests are reproducible", allow-invalid = true },
+    # Rule 3: user files are never overwritten; atomic replace lives in one file module.
+    { path = "std::fs::write", reason = "truncates an existing file: File::create_new, or the atomic replace of the file module" },
+    { path = "std::fs::File::create", replacement = "std::fs::File::create_new", reason = "truncates an existing file" },
+    { path = "std::fs::OpenOptions::truncate", reason = "overwrites an existing file: use create_new" },
+    { path = "std::fs::OpenOptions::create", reason = "may write into an existing file: use create_new, or the file module" },
+    { path = "std::fs::copy", reason = "overwrites the destination" },
+    { path = "std::fs::rename", reason = "replaces the destination: only the atomic replace of the file module renames" },
+    { path = "std::fs::remove_file", reason = "deletes: only the file module, on paths it created" },
+    { path = "std::fs::remove_dir_all", reason = "deletes a whole tree: only the file module, on paths it created" },
+    { path = "tokio::fs::write", reason = "truncates an existing file: use the file module" },
+    { path = "tokio::fs::File::create", reason = "truncates an existing file: use the file module" },
+    { path = "tokio::fs::copy", reason = "overwrites the destination" },
+    { path = "tokio::fs::rename", reason = "replaces the destination: only the file module renames" },
+    # Rule 4: no leaking, no process-global state.
+    { path = "std::boxed::Box::leak", reason = "no leaking to get 'static" },
+    { path = "std::vec::Vec::leak", reason = "no leaking to get 'static" },
+    { path = "std::string::String::leak", reason = "no leaking to get 'static" },
+    { path = "std::env::set_current_dir", reason = "process-global state: pass paths explicitly" },
+    { path = "std::process::abort", reason = "how the program ended is an enum that main maps to the exit code" },
+    { path = "std::env::args", replacement = "std::env::args_os", reason = "panics on an argument that is not UTF-8" },
+    # processes.md: all children go through the one process module.
+    { path = "std::process::Command::new", reason = "child processes go through the one process module (timeouts, pipes, process group)" },
+    # concurrency.md: a dropped JoinHandle detaches the task.
+    { path = "tokio::spawn", reason = "a dropped JoinHandle detaches the task: use a JoinSet owned by the caller" },
+    { path = "tokio::task::spawn", reason = "a dropped JoinHandle detaches the task: use a JoinSet owned by the caller" },
+]
+
+disallowed-types = [
+    # Rule 1: wire formats are read into typed structs at the boundary.
+    { path = "serde_json::Value", reason = "read wire formats into typed structs at the boundary" },
+    { path = "serde_json::Map", reason = "read wire formats into typed structs at the boundary" },
+]
+
+disallowed-macros = [
+    # Rule 4: no global mutable state.
+    { path = "std::thread_local", reason = "no global mutable state: pass state explicitly" },
+]
+
+# ── Projects whose lint `arithmetic_side_effects` is on in boundary modules
+#    may exempt types that cannot overflow (floats in a vector type, big
+#    numbers). Paths are the type's own path, e.g. `malachite::Natural`. ──
+# arithmetic-side-effects-allowed = []

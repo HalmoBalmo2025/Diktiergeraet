@@ -1,0 +1,71 @@
+# Dateiformat / file format: 2
+# Diktator – Einstellungen
+#
+# Bearbeitbar im Panel (Reiter „Einstellungen“) oder hier. Im Panel gilt fast
+# alles sofort; Taste und Modelldatei erst nach einem Neustart (das Panel
+# zeigt dann einen Hinweis). Änderungen hier gelten, sobald das Panel sie
+# zeigt, Taste und Modelldatei auch hier erst nach einem Neustart.
+# Ist die Datei fehlerhaft, startet Diktator mit den Standardwerten.
+# Speichert das Panel, schreibt es die Datei neu (eigene Kommentare gehen
+# dabei verloren).
+
+[tasten]
+# Taste zum Diktieren (antippen; mit ⇧ in der zweiten Sprache):
+# "fn", "rechte_wahltaste", "rechte_befehlstaste" oder "rechte_controltaste"
+diktat = "rechte_befehlstaste"
+
+[sprachen]
+# Sprache für fn + ⇧ (fn allein ist immer Deutsch). Das Modell kennt:
+# "en" Englisch, "ar" Arabisch, "zh" Chinesisch, "fr" Französisch,
+# "el" Griechisch, "it" Italienisch, "ja" Japanisch, "ko" Koreanisch,
+# "nl" Niederländisch, "pl" Polnisch, "pt" Portugiesisch, "es" Spanisch,
+# "vi" Vietnamesisch
+zweite = "es"
+
+[diktat]
+# Ab so vielen Sekunden erscheint ein langes Diktat schon beim Sprechen in
+# Teilen: an der nächsten längeren Pause (meist ein Satzende), ab dem
+# Doppelten an jeder Sprechpause, ab dem Fünffachen auch ohne Pause,
+# spätestens nach 28 s (am Stück nimmt das Modell höchstens 30 s).
+# Später geschnitten liegt der Schnitt seltener mitten im Satz, wo das
+# Modell oft falsche Satzzeichen setzt. 1 bis 20; 0 = erst am Ende.
+teile_ab_sekunden = 12
+
+[toene]
+# Klänge bei Beginn und Ende der Aufnahme und bei Fehlern
+an = false
+# Lautstärke in Prozent (0 bis 100)
+lautstaerke = 40
+
+[modell]
+# Datei im Ordner models/ neben dieser Datei, z. B. eine kleinere Stufe
+# wie "cohere-transcribe-03-2026-Q5_K_M.gguf" (weniger Speicher).
+datei = "cohere-transcribe-03-2026-Q5_K_M.gguf"
+# Nach so vielen Minuten ohne Diktat wird das Modell entladen, damit der
+# Speicher (rund 2,5 GB) frei wird. Das nächste Diktat lädt es neu und
+# dauert dann gut eine Sekunde länger. 0 = nie entladen.
+entladen_nach_minuten = 15
+
+[protokoll]
+# Was Diktator tut, in ~/Library/Logs/Diktator.log (zur Fehlersuche;
+# ohne Text aus Diktaten oder um die Schreibmarke)
+an = false
+
+[ueberarbeiten]
+# Womit fn + ⌥ überarbeitet: "apple" (Apple Intelligence) oder "lokal"
+# (ein Sprachmodell auf diesem Mac über llama.cpp: brew install llama.cpp)
+mit = "lokal"
+# GGUF-Datei im Ordner models/llm/; leer = die erste dort
+modell = "gemma-4-12B-it-Q4_0.gguf"
+# Nach so vielen Minuten ohne Überarbeiten wird das lokale Modell entladen
+# (gibt mehrere GB frei); das nächste Mal lädt es einige Sekunden.
+# 0 = nie entladen.
+entladen_nach_minuten = 5
+
+[transkripte]
+# Zeitmarken wie [12:30] vor jedem Absatz von YouTube- und Datei-Transkripten
+zeitmarken = true
+
+[oberflaeche]
+# Sprache des Panels: "de" Deutsch oder "en" Englisch
+sprache = "en"
